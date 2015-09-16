@@ -42,7 +42,7 @@ Building cloud scale networks is insanely complex, and the different providers c
 
 So instead of trying to describe all the possible options, we'll keep things at a relatively high level and focus on common building blocks we see relatively consistently on the different platforms.
 
-##Types of Cloud Networks
+## Types of Cloud Networks
 
 When you shop providers, cloud networks roughly fit into two buckets:
 
@@ -51,62 +51,97 @@ When you shop providers, cloud networks roughly fit into two buckets:
 
 Most providers today offer full SDNs of different flavors, so we'll focus more on those, but we do still encounter some VLAN architectures and need to cover them at a high level.
 
-###Software Defined Networks
+### Software Defined Networks
 
-As we mentioned, Software Defined Networks are a form of virtual networking that takes advantage (usually) of special features in routing hardware to fully abstract the virtual network you see from the underlying physical network. To your instance (virtual server) everything looks like a normal network, but instead of connecting to a normal network interface it connects to a virtual network interface, which handles everything in software.
+As we mentioned, Software Defined Networks are a form of virtual networking that (usually) takes advantage of special features in routing hardware to fully abstract the virtual network you see from the underlying physical network. To your instance (virtual server) everything looks like a normal network. But instead of connecting to a normal network interface it connects to a virtual network interface which handles everything in software.
 
-SDNs don't work the same as a physical network (or even an older virtual network). For example, in an SDN you can create two networks with overlapping address spaces that run on the same physical hardware, but never see each other. You can create an entirely new subnet not by adding hardware, but with a single API call that "creates" the subnet in software. 
+SDNs don't work the same as a physical network (or even an older virtual network). For example, in an SDN you can create two networks that use the same address spaces and run on the same physical hardware but never see each other. You can create an entirely new subnet not by adding hardware but with a single API call that "creates" the subnet in software. 
 
-How do they work? Ask your cloud provider. Amazon Web Services, for example, intercepts every packet, wraps it and tags it, and uses a custom "mapping service" to figure out where to actually send the packet over the physical network, with multiple security checks to ensure no customer ever sees someone else's packet. (You can watch a video with great details [at this link](http://www.youtube.com/watch?v=Zd5hsL-JNY4)). Your instance never sees the real network, and AWS skips a lot of the normal networking (like ARP requests/caching) within the SDN itself.
+How do they work? Ask your cloud provider. Amazon Web Services, for example, intercepts every packet, wraps it and tags it, and uses a custom mapping service to figure out where to actually send the packet over the physical network with multiple security checks to ensure no customer ever sees someone else's packet. (You can watch a video with great details [at this link][1]). Your instance never sees the real network and AWS skips a lot of the normal networking (like ARP requests/caching) within the SDN itself.
 
-SDN allows you to take all your networking hardware, abstract it, pool it together, and then allocate it however you want. On some cloud providers, for example, you can allocate an entire class B network with multiple subnets, routed to the Internet behind NAT, in just a few minutes or less. Different cloud providers use different underlying technologies, and further complicate things since they all offer different ways of managing the network.
+SDN allows you to take all your networking hardware, abstract it, pool it together, and then allocate it however you want. On some cloud providers, for example, you can allocate an entire class B network with multiple subnets, routed to the Internet behind NAT, in just a few minutes or less. Different cloud providers use different underlying technologies and further complicate things since they all offer different ways of managing the network.
 
 Why make things so complicated? Actually, it makes management of your cloud network much *easier*, while allowing cloud providers to give customers a ton of flexibility to craft the virtual networks they need for different situations. Plus, it handles issues unique to cloud, like provisioning network resources faster than existing hardware can handle configuration changes (a very real problem), or multiple customers needing the same private IP address ranges to better integrate with their existing applications.
 
-###Virtual LANS (VLANS)
+### Virtual LANS (VLANS)
 
-A few providers still rely on VLANS... 
+Although they do not offer the same flexibility as SDNs, a few providers still rely on [VLANS][2]. Customers must evaluate their own needs, but VLAN-based cloud services should be considered outdated compared to SDN-based cloud services.
 
-https://en.wikipedia.org/wiki/Virtual_LAN
+VLANs let you create segmentation on the network and can isolate and filter traffic, in effect just cutting off your own slice of the network rather than creating your own virtual environment. This means you can’t do SDN-level things like creating two networks on the same hardware with the same address range.
 
 - VLANs don't offer the same flexibility. You can create segmentation on the network and isolate and filter traffic, but can't do SDN-level things like create two networks on the same hardware with the same address range.
 - VLANs are built into standard networking hardware, which is why that's where many people used to start. No special software needed.
 - Customers don't get to control their addresses and routing very well
 - Can't be trusted for security segmentation.
-- Mostly being phased out of cloud computing due to these limitations
+Because VLANs were built into standard networking hardware, they used to be where most people started when creating cloud computing as no special software was required. But customers on VLANs don’t get to control their addresses and routing very well. Because of this, VLANs can’t be completely trusted for security segmentation. They are mostly being phased out of cloud computing due to these limitations.
 
-##Defining and Managing Cloud Networks
+## Defining and Managing Cloud Networks
 
-###Cloud Network Architectures
+While we like to think of one big cloud out there, there is more than one kind of cloud network and several technologies that support them. Each provides different features and presents different customization options. Management can also vary between vendors, but there are certain basic characteristics that they exhibit.
 
 * Public cloud network - Internet facing. You connect to your instances/servers via the public Internet, no special routing needed; every instance has a public IP address.
 * Private cloud network - sometimes called "virtual private cloud". Uses private IP addresses like most of you use on the LAN. You have to have a back-end connection, like a VPN, to connect to your instances. Most providers allow you to pick your address ranges so you can use these private networks as an extension of your existing network. If you need to bridge traffic to the Internet you route it back through your data center, or you use Network Address Translation to a public network segment, similar to how we NAT our existing LANs to the Internet.
 * Internet connectivity (Internet Gateway) hooks your cloud network to the Internet. You don't tend to directly manage it, your cloud provider does it for you.
 * Internal Gateways/connectivity- these connect your existing datacenter to your private network in the cloud. Often VPN based, but instead of managing the VPN server yourself, the cloud provider handles it (and you just manage the configuration). Some providers also support direct connections through partner broadband network providers that will route directly between your data center and the private cloud network, instead of using a VPN (leased lines).
 * Virtual Private Networks- instead of using the cloud provider's, you can always set your own up assuming you can bridge the private and public networks in the cloud provider. Very common, especially if you don't want to directly connect your data center and cloud, but still want a private segment and allow access to it for your users/developers/admins.
-* Cloud providers all break up their physical infrastructure differently. Typically they have different data centers (which might be a collection of multiple data centers clumped together) in different regions. This is for performance/proximity, to meet local legal and regulatory requirements around data residency, and for disaster recovery/availability. Most providers charge for some or all network traffic if you communicate across regions/locations, which would make disaster recovery expensive. So they provide local "zones" that break out an individual region into isolated pieces with their own network, power, etc. A problem might take out one zone in a region, but shouldn't take out any others, giving customer's a way to build for resiliency without having to span continents or oceans. Plus, you don't tend to pay for the local network traffic between zones. 
+### Cloud Network Architectures
 
-###Managing Cloud Networks
+An understanding of the types of cloud network architectures and the different technologies that enable them is essential to fitting your needs with the right solution.
 
 * everything managed over APIs. Typically REST-based.
 * You can fully define and change everything remotely via API, and it happens nearly instantly in most cases.
 * Cloud platforms also have web UIs, which still use the APIs, but tend to automate a lot of the heavy lifting for you.
-* Key for security is protecting these management interfaces, since someone can otherwise completely reconfigure your network while sitting at a hipster coffee shop, making them, by definition, evil.
+There are two basic types of cloud network architectures.
 
-##Hybrid cloud architectures
+* *Public cloud networks* are Internet facing. You connect to your instances/servers via the public Internet and no special routing needed; every instance has a public IP address.
+* *Private cloud networks* (sometimes called "virtual private cloud”) use private IP addresses like you would use on a LAN. You have to have a back-end connection — like a VPN — to connect to your instances. Most providers allow you to pick your address ranges so you can use these private networks as an extension of your existing network. If you need to bridge traffic to the Internet, you route it back through your data center or you use Network Address Translation to a public network segment, similarly to how home networks use NAT to bridge to the Internet.
 
 As mentioned, connect your data center to the cloud.
 Why? Sometimes you need more resources, and you don't want them on the public Internet. Also very common for established companies that aren't starting from scratch, and need to mix and match resources.
-* VPN-based- you connect to the cloud via a dedicated VPN, which is nearly always hardware based and hooked into your local routers to span traffic to the cloud. The cloud provider, as mentioned, handles their side of the VPN, but you still have to configure some of it. All traffic goes over the Internet
-* Direct network connections- typically over leased lines. Isn't necessarily more secure, and much more expensive, but can reduce latency.
+These are enabled and supported by the following technologies.
 
 ##Routing Challenges
+* *Internal Gateways/connectivity* connect your existing datacenter to your private network in the cloud. These are often VPN based, but instead of managing the VPN server yourself, the cloud provider handles it (you just manage the configuration). Some providers also support direct connections through partner broadband network providers that will route directly between your data center and the private cloud network, instead of using a VPN (which are on leased lines).
+* *Virtual Private Networks* - Instead of using the cloud provider's, you can always set up your own, assuming you can bridge the private and public networks in the cloud provider. This kind of setup is very common, especially if you don't want to directly connect your data center and cloud, but still want a private segment and allow access to it for your users, developers and administrators.
 
-* Auto scaling is when you define rules in your cloud to add or remove instances of a server based on rules, like when you hit 80% CPU load. It can then terminate those instances when load drops (clearly you need to architect for this kind of behavior). Creates application elasticity, since your resources automatically adapt based on demand, instead of having to leave a bunch of servers running all the time just in case demand increases. This is the real heart of Infrastructure as a Service.
-* If you think about it, you won't necessarily know the exact IP address of all your servers, since they may appear and disappear within minutes. 
+Cloud providers all break up their physical infrastructure differently. Typically they have different data centers (which might be a collection of multiple data centers clumped together) in different regions. This is for:
+
+* *Performance* - By allowing you to take advantage of physical proximity, you can improve performance of applications that conduct high levels of traffic.
+* *Regulatory requirements* - Flexibility in the geographic location of your data stores can help meet local legal and regulatory requirements around data residency.
+* *Disaster recovery and maintaining availability* - Most providers charge for some or all network traffic if you communicate across regions and locations, which would make disaster recovery expensive. That’s why they provide local "zones" that break out an individual region into isolated pieces with their own network, power, and so forth. A problem might take out one zone in a region, but shouldn't take out any others, giving customers a way to build for resiliency without having to span continents or oceans. Plus, you don't tend to pay for the local network traffic between zones. 
 * Better yet- when you design for availability you tend to set the rules to keep multiple instances in multiple subnets across multiple zones, in case one of them drops out.
 * And within those virtual subnets, you might have multiple different types of instances, with different security requirements. This is pretty common in cloud computing.
 * All this challenges security- fewer static routes, highly dynamic addressing, and servers that might only "live" for less than an hour. Requires new ways of thinking, which is what the rest of this paper will focus on.
 
+### Managing Cloud Networks
+
+Managing these networks depends on all of the components listed above. Each vendor will have its own set of tools based on certain general principles.
+
+* Everything is managed via APIs, which are typically REST (representational state transfer)-based.
+* You can fully define and change everything remotely via these APIs and it happens nearly instantly in most cases.
+* Cloud platforms also have web UIs, which are simply front ends for the same APIs you might code to but tend to automate a lot of the heavy lifting for you.
+* Key for security is protecting these management interfaces since someone can otherwise completely reconfigure your network while sitting at a hipster coffee shop, making them, by definition, evil (you can usually spot them by the ski masks).
+
+## Hybrid cloud architectures
+
+As mentioned, your data center should be connected to the cloud. Why? Sometimes you need more resources and you don't want them on the public Internet. This is a common practice for established companies that aren't starting from scratch and need to mix and match resources.
+
+There are two ways to accomplish this.
+
+* *VPN connections* - You connect to the cloud via a dedicated VPN, which is nearly always hardware-based and hooked into your local routers to span traffic to the cloud. The cloud provider, as mentioned, handles their side of the VPN, but you still have to configure some of it. All traffic goes over the Internet but is isolated.
+* *Direct network connections* - These are typically set up over leased lines. They aren’t necessarily more secure and are much more expensive but they can reduce latency.
+
+## Routing Challenges
+
+While cloud services can provide remarkable flexibility, they also require plenty of customization and present their own challenges for security.
+
+SDN services let you do auto scaling. You can define your own rules in your cloud for when to add or remove instances of a server. For example, you can set a rule that says to add servers when you hit 80 percent CPU load. It can then terminate those instances when load drops (clearly you need to architect appropriately for this kind of behavior). This creates application elasticity since your resources can automatically adapt based on demand instead of having to leave servers running all the time just in case demand increases. This is the heart of IaaS. This is what you’re paying for.
+
+This flexibility creates complexity. If you think about it, you won't necessarily know the exact IP address of all your servers since they may appear and disappear within minutes. You may even design in complexity when you design for availability — by creating rules to keep multiple instances in multiple subnets across multiple zones available in case one of them drops out. Within those virtual subnets, you might have multiple different types of instances with different security requirements. This is pretty common in cloud computing.
+
+Fewer static routes, highly dynamic addressing and servers that might only "live" for less than an hour… all this challenges security. It requires new ways of thinking, which is what the rest of this paper will focus on.
 
 
+
+[1]:	http://www.youtube.com/watch?v=Zd5hsL-JNY4
+[2]:	https://en.wikipedia.org/wiki/Virtual_LAN
