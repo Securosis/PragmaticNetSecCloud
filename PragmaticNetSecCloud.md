@@ -176,13 +176,12 @@ There are a number of add-ons you can buy through your cloud provider, or buy an
 	PRO: Like virtual appliances, host security agents can offer features missing from your provider. With a good management system, they can be extremely flexible and will usually include capabilities beyond network security. They're a great option for monitoring network traffic.
 	CON: You need to make sure they are installed and run in all your instances and they're not free. They also won't work well if you don't get one that's designed for the cloud.
 
-A note on monitoring: None of the major providers offer packet level network monitoring and many don't offer any network monitoring at all. If you need that, consider using host agents or virtual appliances.
+> A note on monitoring: None of the major providers offer packet level network monitoring and many don't offer any network monitoring at all. If you need that, consider using host agents or virtual appliances.
 
 
 
 [1]:	http://www.youtube.com/watch?v=Zd5hsL-JNY4
 [2]:	https://en.wikipedia.org/wiki/Virtual_LAN
--------------------NEW RM MATERIAL BELOW HERE------------------
 
 To review, your network security controls, no matter what the provider calls them, nearly always fall into 5 buckets:
 
@@ -215,8 +214,10 @@ From a network security perspective, this means there are a few key things you n
 * Provider specific limitations or advantages. All providers are different. Nothing is standard, and don't expect it to ever be standard. One provider's security group is another's ACL. Some allow more granular management. There may be limits on the number of security rules available. A provider might offer both allow and deny rules, or allow only. Take the time to learn the ins and outs of your provider's capabilities. They all offer plenty of documentation and training, and in our experience most organizations limit themselves to no more than one to three infrastructure providers, keeping the problem manageable.
 * Application needs. Applications, especially ones using newer architectures we will mention in a moment, will often have different needs than apps deployed on traditional infrastructure. For example, application components in your private network segment may still need Internet access to connect to a cloud component, such as storage, a message bus, or a database. These needs will directly affect architectural decisions, security or otherwise.
 * New architectures -- Cloud applications will use different design patterns than apps on traditional infrastructure. For example, as previously mentioned, components will probably distributed in diverse network locations for resiliency, tied tightly to cloud-based load balancers. Early cloud applications often emulated traditional architectures, but modern cloud applications make extensive use of advanced features, particularly Platform as a Service, that may be deeply integrated into a particular cloud provider. Cloud-based databases, message queues, notification systems, storage, containers, and application platforms are all now common due to their cost, performance, and agility benefits. You often can't even control the network security of these services, since they are fully managed by the cloud provider. Continuous deployment, DevOps, and immutable servers are the norm, not exceptions. On the upside, used properly these architectures and patterns are far more secure, cost effective, resilient, and agile than building everything yourself, but you do need to understand how they work.
+
 >Data Analytics Design Pattern Example
 >a common data analytics design pattern highlights these differences. Instead of keeping a running analytics pool and sending it data via SFTP, you start by loading data into cloud storage directly using an (encrypted) API call. This, using a feature of the cloud, triggers the launch of a pool of analytics servers and passes on the job to a message queue in the cloud. The message queue distributes the jobs to the analytics servers, which use a cloud-based notification service to signal when they are done, and the queue will redistributed broken jobs. Once it's all done the results are stored in a cloud-based no-SQL database, and the source files are archived. It's similar to "normal" data analytics except everything is event driven, using features and components of the cloud service. It can handle as many concurrent jobs as you need, yet you don't have anything running (and racking up charges) until a job enters the system.
+
 * Elasticity and a high rate of change are the norm in the cloud. Beyond auto scaling, cloud applications tend to alter the infrastructure around them to maximize the benefits of cloud computing. For example, one of the best ways to update a cloud application isn't to patch servers, but create an entirely new version of the app, based on a template, running in parallel and than swap traffic over from the current version. This breaks familiar security approaches, like relying on IP addresses for server identification, vulnerability scanning, logging based on server name or address, and other controls that aren't adapted for cloud.
 * Managing and monitoring security changes, since you either need to learn how to manage cloud security using the provider's console and APIs, or pick security tools that directly integrate. This may become especially complex if you need to normalize security between your data center and cloud provider when building a hybrid cloud. Also, few cloud providers offer good tools to track security changes over time, which means you will need to track them yourself, or use a third party tool.
 
@@ -245,7 +246,7 @@ Whenever possible, we actually recommend avoiding hybrid cloud deployments. It i
 
 Plus, hybrid clouds complicate security. We've actually seen them, not infrequently, *reduce* the overall security level in your cloud since assets in your datacenter aren't as segregated as on the cloud network, and cloud providers tend to be more secure than most organizations can achieve in their own infrastructure. Instead of cracking your cloud provider, someone only needs to crack a system on your corporate network, and use that to directly bridge to the cloud.
 
-So when should you consider a hybrid deployment? Anytime your application architecture requires direct, address-based access to an internal asset that isn't Internet accessible. Alternatively, sometimes you need a cloud asset on a static, non-Internet routable address, like an email server or other service that isn't designed to work with auto scaling, that internal things need to connect to. (We *really* recommend you minimize these since they don't take advantage of the benefits of cloud computing, so there usually isn't a good reason to deploy them there). And yes, this means hybrid deployments are extremely common unless you are building everything from scratch. Just because we try to minimize their use doesn't mean they don't play a very important role.
+So when should you consider a hybrid deployment? Any time your application architecture requires direct, address-based access to an internal asset that isn't Internet accessible. Alternatively, sometimes you need a cloud asset on a static, non-Internet routable address, like an email server or other service that isn't designed to work with auto scaling, that internal things need to connect to. (We *really* recommend you minimize these since they don't take advantage of the benefits of cloud computing, so there usually isn't a good reason to deploy them there). And yes, this means hybrid deployments are extremely common unless you are building everything from scratch. Just because we try to minimize their use doesn't mean they don't play a very important role.
 
 From a security perspective, there are a few things to keep in mind when building a hybrid deployment:
 
@@ -292,20 +293,97 @@ Here are some suggestions on managing cloud network security for the long haul:
 * We suggest you build your team with both security architects (to help in design) and operators (to implement and fix).
 * Cloud projects occur outside the constraints of your data center, including normal operations, which means you might need to make some organizational changes so security is engaged in projects. A security representative should be assigned and integrated on each cloud project. Think about how things normally work -- someone starts a new project and security gets called when they need access or firewall rule changes. With cloud computing, network security isn't blocking anything (unless they need access to an on-premise resource) and entire projects can happen without security or ops every being directly involved. You need to adapt your policies and org structure to minimize this risk. For example, work with procurement to require a security evaluation/consultation before any new cloud account is opened.
 * Since so much of cloud network security relies on architecture, it isn't just important to have an architect on the team, it's critical they are engaged early in projects. It also goes without saying that this should be a collaborative role. Don't merely write out some pre-approved architectures and then try and force everyone to work within those constraints. You'll lose that fight before you even know it started.
-
-###Discovery
+-------------------RM after here-------------------------------------
+### Discovery
 
 We hinted at this in the section above -- one of the first challenges is to find all the cloud projects, and then keep finding the new ones over time. Then you need to enumerate the existing cloud network security controls. Here are a couple ways we've seen clients successfully keep tabs on cloud computing:
 
 * If your critical assets (such as the customer database) are well locked down, you can use this to control cloud projects. If they want access to the data/application/whatever, they need to meet your security requirements.
-* Procurement and accounting are the next best options. At some point someone needs to pay the (cloud) piper, and you can work with accounting to identify payments to cloud providers and tie them back to the teams involved.
+* Procurement and accounting are the next best options. At some point someone needs to pay the (cloud) piper, and you can work with accounting to identify payments to cloud providers and tie them back to the teams involved. Just make sure you differentiate between those credit card charges to Amazon for office supplies from the one to replicate your entire datacenter in AWS.
 * Hybrid connections to your data center are clearly pretty easy to track using established process. Unless you let random employees plug in VPN routers.
-* Lastly, we suppose you can always set a policy that says "don't cloud without telling us". I mean, if you trust your people and all. It could work. Maybe.
+* Lastly, we suppose you can always set a policy that says "don't cloud without telling us". I mean, if you trust your people and all. It could work. Maybe. It's probably good to have to keep the auditors happy anyway.
 
 The next discovery challenge is to figure out how the cloud networks are architected and secured:
 
+* First, always start with the project team. Sit down with them and perform an architecture and implementation review.
+* It's an early market, but there are some assessment tools that can help. Especially to analyze security groups/network security and compare it to best practices.
+* You can use the cloud provider's console in many cases, but most of them don't provide a good overall network view. If you don't have a tool to help, you can use scripting and API calls to pull down the raw configuration and manually analyze it.
 
-start with standard policies, encoded into templates where you can, then track for changes
+### Integrating with Development
+
+In the broadest sense there are two kinds of cloud deployments — applications you build and run in the cloud (or hybrid), and core infrastructure (like file and mail servers) you transition to cloud. While developers play a central role in the former, they are also often involved in the latter.
+
+Cloud is essentially *software defined everything*. We build and manage all kinds of cloud deployments using code. Even if you start by merely transitioning a few servers into virtual machines on a cloud provider, you will always end up defining and managing much of your environment in code.
+
+This is actually an incredible opportunity for security. Instead of sitting outside the organization and trying to protect things by building external walls, we gain a much greater ability to manage security using the exact same tools development and operations are using to define, build, and run the infrastructure and services. Here are a few key ways to integrate with development and ensure security is integrated:
+
+* Create a handbook of design patterns for the cloud providers you support, including security controls and general requirements. Keep adding new patterns as you work on new projects. Then make this library available to business units and development teams so they know which architectures already have general approval from security.
+* A cloud security architect is pretty essential, and this person or team should engage early with development teams to help build security into the initial design. And we hate to have to say it, but their role really needs to be collaborative. Lay down the law with a bunch of requirements that interfere with the project's requirements and they definitely won't be invited back to the table.
+* A lot of security can be automated and templated by working with development. For example, monitoring and automation code that can be deployed on projects without the project team having to develop them from scratch. Even integrating third party tools can often be managed programatically.
+
+### Policy Enforcement
+
+Change is constant in cloud computing. The entire founding concept is adjusting capacity (and configuration) to meet changing demands. When we say "enforce policies" we mean that, for a given project, once you design the security you are able to keep it consistent. Just because clouds change all the time doesn't mean it's okay to let a developer drop all the firewalls by mistake.
+
+The key policy enforcement difference between traditional networking and cloud is that, in traditional infrastructure, security has exclusive control over firewalls and other security tools. In cloud, anyone with the proper authorizations with the cloud platform can make those changes. Even applications can potentially change their own infrastructure around them. That's why you need to rely more on automation to detect and manage change.
+
+You lose the single point of control. Heck, your own developers can create entire networks from their desktops. Remember the days when people would occasionally plug in their own wireless router or file server? It's a little like that, and more like them building their own datacenter over lunch. Here are some techniques for managing these changes:
+
+* Use access controls to limit who can change what on a given cloud project. It is pretty typical to allow developers a lot of freedom in their dev environment, but totally lock down any network security changes in production, using IAM features of your cloud provider.
+* To the greatest degree possible, try to use cloudprovider-specific templates to define your infrastructure. These files contain a programmatic description of your environment, including complete network and network security configurations. You load them into the cloud platform and it builds the environment for you. This is a very common way to deploy cloud applications, and is essential in organizations using DevOps, since they enforce consistency. 
+* When this isn't possible, you will need to use a tool or manually pull the network architecture and configuration (including security) and document them. This is your baseline.
+* Then you need to automate change monitoring using a tool or the features of your cloud and/or network security provider.:
+	* Cloud platforms are slowly adding detection and alerting to security configurations, but it's still early and often manual to set up. This is where cloud-specific training and staffing can really pay off, and there are also some third-party tools to monitor these changes for you.
+	* When you use virtual appliances or host security, you don't rely on the cloud provider and you may be able to hook in change management and policy enforcement into your existing approaches. Since these are security specific tools, unlike cloud provider features the security team will often have exclusive access and be responsible for making changes themselves.
+* Did we mention automation? We will talk about it more in a minute, but that's really the only way to maintain cloud security over time.
+
+### Normalizing On-Premise and Cloud Security
+
+Organizations have a lot of security requirements for very good reasons, and need to ensure these controls are consistently applied. We also have a tremendous amount of network security experience from decades of running our own networks that are still relevant when moving into the cloud. The challenge is to carry over these requirements and experiences without assuming they work the same in the cloud, or letting them interfere with the benefits of cloud computing.
+
+* Start by translating whatever rules sets you have on-premise into a comparable version in the cloud. This takes a few steps:
+	* Figure out which rules should still apply, or which new rules you need. For example, a policy to deny all SSH traffic from the Internet won't work if that's how you manage public cloud servers. Instead, a policy that limits SSH access to your corporate CIDR makes more sense. Another example is the common restriction that back-end servers shouldn't have any Internet access at all, yet they might need it to connect to PaaS components of their own architecture.
+	* Then, adjust your policies into enforceable rules-sets. For example, security groups and ACLs work differently, and how you enforce them changes. Instead of setting subnet-based policies with a ton of rules, tie security group policies to instances based on their function. We once encountered a client that tried to recreate very-complex firewall rules sets into security groups, exceeding the rule count limit of their provider. Instead we recommended a set of policies for different categories of instances. 
+	* Watch out for policies like "deny all traffic from this IP range". Those can be very difficult to enforce in the cloud using native tools, and if you *really* have those requirements you will likely need a network security virtual appliance or host security agent. In many projects we find you can resolve the same level of risk with smarter architectural decisions (e.g. using immutable servers, which we will talk about in a moment).
+	* Don't just drop in a virtual appliance because you are used to it and know how to build the rules. Always start with what your cloud provider offers, then layer on additional tools as needed. 
+	* If you *migrate existing applications to the cloud* the process is a little more complex. You will need to evaluate existing security controls, discover and analyze application dependencies and network requirements, and *then* translate them for a cloud deployment, taking into account all the differences we have been talking about. 
+* Once you translate the rules, normalize operations. This means having a consistent process to deploy, manage, and monitor your network security over time. Fully covering this is beyond to scope of this research, since it depends on how you manage network security operations today. Just remember that you are trying to blend what you do now with what the cloud projects need, not merely enforce your existing processes onto an entirely new operating model. 
+
+We hate to say it (but we will), but this is a process of transition. We find customers that start on a project-by-project basis are more successful since they can learn as they go and build up a repository of knowledge and experience. 
+
+### Automation and Immutable Network Security
+
+Cloud security automation isn't merely fodder for another paper; it's an entirely new body of knowledge are are only just beginning to build. 
+
+Any organization that moves to cloud in any significant way learns quickly that automation is the only way to survive. Think about it, how else can you manage multiple copies of a single project in different environments, never mind dozens or hundreds of different projects, all running in their own *sets* of cloud accounts across multiple providers.
+
+Then, keep all those projects compliant with regulatory requirements and your internal security policies.
+
+Yeah, it's like that.
+
+But this isn't an unsolvable problem. Every day we see more examples of companies successfully using the cloud, at scale, and staying secure and compliance. Today, in large part, they build their own library of tools and scripts to continually monitor and enforce changes. We also see some emerging tools to help with this management, and we expect to see many more in the near future. 
+
+A core developing concept tied to automation is that of *immutable security*, and it's one we have used ourselves.
+
+One of the core problems in security is managing change. We design something, build in security, deploy it, validate that security, and lock everything down. This inevitably drifts as it's patched, updated, improved, and otherwise modified. Immutable security leverages automation, DevOps techniques, and inherent cloud characteristics to break this cycle. To be honest, it's really nothing more than DevOps as applied to security, and all the principles are in wide use already.
+
+For example, an *immutable server* is one that is never logged into and changed in production. If you go back and think about auto scaling we deploy servers based on standard images. Changing one of those servers after deployment doesn't make sense, because those changes aren't in the image, and new versions launched into the auto scale group won't include the changes. Instead, DevOps creates a new image with all changes, then alters the auto scale group rules to deploy new instances based on the new image and, in some cases, kill off the older versions.
+
+In other words, no more patching, no more logging into servers. You take a new, known good state, and completely override what is in production. 
+
+Now think about how this applies to network security. We can build templates to automatically deploy entire environments on our cloud providers. We can write network security policies, then override any changes automatically, even across multiple cloud accounts. It pushes the security effort earlier into design and development, but then enables much more consistent enforcement in operations. And we use the exact same toolchain as development and operations to deploy our security controls, instead of trying to build our own on the side and overlay enforcement. 
+
+This might seem like an aside, but these automation principles are the cornerstone of real-world cloud security, especially at scale. It's a capability we simply never have in traditional infrastructure where we can't simply stamp out new environments automatically and have to hand-configure everything.
+
+# Design Patterns
+
+To finish off this research it's time to show you want some of this looks like. Here are some practical design patterns based on projects we've worked on. The examples are specific to Amazon Web Services and Microsoft Azure as opposed to generic templates. Generic patterns are harder to explain, and we would rather you understand what these look like in the real world.
+
+
+
+
+
+
 
 
 
