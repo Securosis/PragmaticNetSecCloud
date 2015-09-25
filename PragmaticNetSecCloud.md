@@ -34,7 +34,7 @@ But hybrid networks complicate management, both in your data center and in the c
 
 This paper will explain how cloud network security is different, and how to pragmatically manage it for both pure cloud and hybrid cloud networks. We will start with some background material and cloud networking 101, then move into cloud network security controls, and specific recommendations on how to use them. It is written for readers with a basic background in networking, but if you made it this far you'll be fine.
 
-# Cloud Networking 101
+#Cloud Networking 101
 
 There is no canonical cloud networking stack -- each cloud service provider uses its own mix of technologies to wire everything up. Some of these use known standards, tech, and frameworks, while others are completely proprietary and so secret that you as a customer never know exactly what is going on under the hood.
 
@@ -133,68 +133,62 @@ Fewer static routes, highly dynamic addressing, and servers that can exist for l
 
 Our goal is to start getting you comfortable with how different cloud networks can be. On the surface, depending on your provider, you may still be managing subnets, routing tables, and ACLs. But underneath these are now probably database entries implemented in software, not the hardware you might be used to.
 
-# Network Security Controls
+#Network Security Controls
 
-Now that we've covered the basics of cloud networks, it's time to focus on the available security controls. Keep in mind that all of this varies between providers and that cloud computing is rapidly evolving and new capabilities are constantly appearing. These fundamentals give you the background to get started, but you will still need to learn the ins and outs of whatever platforms you work with.
+Now that we have covered the basics of cloud networks it's time to focus on available security controls. Keep in mind that all of this varies between providers, and that cloud computing is rapidly evolving, with new capabilities are appearing constantly. These fundamentals give you the background to get started, but you will need to learn the ins and outs of whatever platforms you work with.
 
 ##What Cloud Providers Give You
 
-Not to sound like a broken record (those round things your parents listened to... no, not the small shiny ones with lasers), but all providers are different. The following options are relatively common across providers, but not necessarily ubiquitous.
+Not to sound like a broken record (those round things your parents listened to... no, not the small shiny ones with lasers), but all providers are different. The following options are relatively common across providers, but not ubiquitous.
 
-* **Perimeter security** is traditional network security that the provider totally manages, invisibly to the customers. Firewalls, IPS, etc. are used to protect the provider's infrastructure. The customer doesn't control any of it.
+* **Perimeter security** is traditional network security that the provider totally manages, invisibly to their customers. Firewalls, IPS, etc. are used to protect the provider's infrastructure. The customer doesn't control any of it.
+ * **Pro:** It's free, effective, and always there.
+ * **Con:** You don't control any of it, and it's only useful for stopping background attacks.
 
-	PRO: It's free, effective, and always there.
-	CON: You don't control any of it, and it's only useful for stopping background attacks.
+* **Security groups:** Think of a group as a tag you can apply to a network interface/instance (or certain other cloud objects, such as databases and load balancers) that applies an associated set of network security rules. Security groups combine the best of network and host firewalls, because you get policies that can follow individual servers (or even network interfaces) like a host firewall, but you manage them like network firewalls, with protection applied no matter what is running inside. You get the granularity of a host firewall with the manageability of a network firewall. They are critical to auto scaling. You are now spreading assets all over your virtual network, and instances appear and disappear on demand, so you cannot build security rules on IP addresses. Here's an example: You can create a "database" security group that only allows access to one specific database port, from instances inside a "web server" security group, and only the web servers in that group can talk to the database servers in this "database" group. Unlike a network firewall, the database servers can't talk to each other, because they aren't in the web server group (remember, these rules are applied on a per-server basis, not at subnet boundaries). As new databases pop up the right security is applied so long as they have the tag. Unlike host firewalls you don't need to log into servers to make changes, so everything is much easier to manage. Not all providers use this term, but the concept of security rules as a policy set you can apply to instances is relatively consistent.
+ * **Pro:** It's free and it works hand in hand with auto scaling and default deny. It's very granular but also very easy to manage. It's the core of cloud network security.
+ * **Con:** They are usually allow rules only (you can't explicitly deny), basic firewalling only, and you cannot manage them using familiar tools.
 
-* **Security groups** -- Think of this is a tag you can apply to a network interface/instance (or certain other cloud objects, like a database or load balancer) that applies an associated set of network security rules. Security groups combine the best of network and host firewalls, since you get policies that can follow individual servers (or even network interfaces) like a host firewall but you manage them like a network firewall and protection is applied no matter what is running inside. You get the granularity of a host firewall with the manageability of a network firewall. These are critical to auto scaling -- since you are now spreading your assets all over your virtual network -- and, because instances appear and disappear on demand, you can't rely on IP addresses to build your security rules. Here's an example: You can create a "database" security group that only allows access to one specific database port and only from instances inside a "web server" security group, and only those web servers in that group can talk to the database servers in that group. Unlike a network firewall the database servers can't talk to each other since they aren't in the web server group (remember, the rules get applied on a per-server basis, not a subnet). As new databases pop up, the right security is applied as long as they have the tag. Unlike host firewalls, you don't need to log into servers to make changes, everything is much easier to manage. Not all providers use this term, but the concept of security rules as a policy set you can apply to instances is relatively consistent.
-
-	PRO: It's free and it works hand in hand with auto scaling and default deny. It's very granular but also very easy to manage. It's the core of cloud network security.
-	CON: They are usually allow rules only (you can't explicitly deny), basic firewalling only and you can't manage them using tools you are already used to.
-
-* **ACLs (Access Control Lists)** -- While security groups work on a per instance (or object) level, ACLs restrict communications between subnets in your virtual network. Not all providers offer them and they are more to handle legacy network configurations (when you need a restriction that matches what you might have in your existing data center) than "modern" cloud architectures (which typically ignore or avoid them). In some cases you can use them to get around the limitations of security groups, depending on your provider.
-
-	PRO: ACLs can isolate traffic between virtual network segments and can create both allow or deny rules
-	CON: They're not great for auto scaling and don't apply to specific instances. You also lose some powerful granularity.
-
-	By default nearly all cloud providers launch your assets with default-deny on all inbound traffic. Some might automatically open a management port from your current location (based on IP address), but that's about it. Some providers may use the term ACL to describe what we called a security group. Sorry, it's confusing, but blame the vendors, not your friendly neighborhood analysts.
+* **ACLs (Access Control Lists)** -- While security groups work on a per instance (or object) level, ACLs restrict communications between subnets in your virtual network. Not all providers offer them, and they are more to handle legacy network configurations (when you need a restriction that matches what you might have in your existing data center) than 'modern' cloud architectures (which typically ignore or avoid them). In some cases you can use them to get around the limitations of security groups, depending on your provider.
+ * **Pro:** ACLs can isolate traffic between virtual network segments and can create both `allow` and `deny` rules.
+ * **Con:** They're not great for auto scaling and don't apply to specific instances. You also lose some powerful granularity.
+ * By default nearly all cloud providers launch your assets with default-deny on all inbound traffic. Some might automatically open a management port from your current location (based on IP address), but that's about it. Some providers may use the term ACL to describe what we called a security group. Sorry -- we know it's confusing, but blame the vendors, not your friendly neighborhood analysts.
 
 ###Commercial Options
 
 There are a number of add-ons you can buy through your cloud provider, or buy and run yourself.
 
-* **Physical security appliances:** The provider will provision an old-school piece of hardware to protect your assets. These are mostly just seen in VLAN-based providers and are considered pretty antiquated. They may also be used in private (on premise) clouds where you control and run the network yourself, which is out of scope for this research.
+* **Physical security appliances:** The provider will provision an old-school piece of hardware to protect your assets. These are mostly seen at VLAN-based providers, and are pretty antiquated. They may also be used in private (on-premise) clouds, where you control and run the network yourself, which is out of scope for this research.
+ * **Pro:** They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider, and in that case this paper isn't for you.
 
-	PRO: They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider and in that case this paper isn't for you.
+* **Virtual appliances** are a virtual machine version of your friendly neighborhood security appliance, and must be configured and tuned for the cloud platform you are working on. They can provide more advanced security -- such as IPS, WAF, NGFW -- than cloud providers typically offer. They are also useful for capturing network traffic, which providers tend not to support.
+ * **Pro:** They enable more advanced network security, and can be managed the same as on-premise versions of these tools.
+ * **Con:** Cost can be a concern because they use resources like any other virtual server constraining your architectures, and may not play well with auto scaling and other cloud features.
 
-* **Virtual appliances** are a virtual machine version of your friendly neighborhood security appliance and must be configured and tuned for the cloud platform you are working on. They can provide more advanced security -- such as IPS, WAF, NGFW -- than the cloud providers typically offer. They're also useful for capturing network traffic, which providers tend not to support.
+* **Host security agents** are software agents you build into images, which run in your instances and provide network security. This could include IDS, IPS, or other features beyond basic firewalling. We recommend lightweight agents with remote management. The agents (and management platform) need to be designed for use in cloud computing, because auto scaling and portability break traditional tools.
+ * **Pro:** Like virtual appliances, host security agents can offer features missing from your provider. With a good management system they can be extremely flexible, and they usually include capabilities beyond network security. They are a great option for monitoring network traffic.
+ * **Con:** You need to make sure they are installed and run in all your instances, and they are not free. They also won't work well if you get one that isn't designed for the cloud.
 
-	PRO: They enable more-advanced network security and can manage the same as you do your on-premise versions of the tool.
-	CON: Cost can be a concern, since these use resources like any other virtual server, constrains your architectures and they may not play well with auto scaling and other cloud-native features.
-
-* **Host security agents** are software agents you build into your images that run in your instances and provide network security. This could include IDS, IPS or other features that are beyond basic firewalling. We recommend lightweight agents with remote management. The agents (and management platform) need to be designed for use in cloud computing since auto scaling and portability will break traditional tools.
-
-	PRO: Like virtual appliances, host security agents can offer features missing from your provider. With a good management system, they can be extremely flexible and will usually include capabilities beyond network security. They're a great option for monitoring network traffic.
-	CON: You need to make sure they are installed and run in all your instances and they're not free. They also won't work well if you don't get one that's designed for the cloud.
-
-> A note on monitoring: None of the major providers offer packet level network monitoring and many don't offer any network monitoring at all. If you need that, consider using host agents or virtual appliances.
+> A note on monitoring: None of the major providers offers packet-level network monitoring and many don't offer any network monitoring at all. If you need it, consider host agents and virtual appliances.
 
 
 
 [1]:	http://www.youtube.com/watch?v=Zd5hsL-JNY4
 [2]:	https://en.wikipedia.org/wiki/Virtual_LAN
 
-To review, your network security controls, no matter what the provider calls them, nearly always fall into 5 buckets:
+To review, your network security controls, no matter what your provider calls them, nearly always fall into 5 buckets:
 
-* Perimeter security the provider puts in place, that you never see or control.
+* Perimeter security the provider puts in place, you never see or control.
 * Software firewalls built into the cloud platform (security groups) that protect cloud assets (like instances), offer basic firewalling, and are designed for auto scaling and other cloud-specific uses.
 * Lower-level Access Control Lists for controlling access into, out of, and between the subnets in your virtual cloud network.
-* Virtual appliances to add the expanded features of your familiar network security tools, such as IDS/IPS, WAF, and NGFW.
+* Virtual appliances to add expanded features from your familiar network security tools, such as IDS/IPS, WAF, and NGFW.
 * Host security agents to embed in your instances.
 
 >Advanced Options on the Horizon
->We know some niche vendors already offer more-advanced network security built into their platform like IPS, and suspect major vendors will eventually offer similar options. We don't recommend picking a cloud provider based on these, but it does mean you may get more options in the future.
+>
+>We know some niche vendors already offer more advanced network security built into their platforms, such as IPS, and we suspect major vendors to eventually offer similar options. We don't recommend picking a cloud provider based on these, but you may get more options in the future.
 
-# Building Your Cloud Network Security Program
+#Building Your Cloud Network Security Program
 
 There isn't any single "best" way to secure a cloud or hybrid network. Cloud computing is moving faster than any other technology in decades, with providers constantly trying to out innovate each other with new capabilities. Thus you can't lock into any single architecture, and instead need to build out a program capable of handling diverse, ever changing needs.
 
@@ -294,7 +288,7 @@ Here are some suggestions on managing cloud network security for the long haul:
 * Cloud projects occur outside the constraints of your data center, including normal operations, which means you might need to make some organizational changes so security is engaged in projects. A security representative should be assigned and integrated on each cloud project. Think about how things normally work -- someone starts a new project and security gets called when they need access or firewall rule changes. With cloud computing, network security isn't blocking anything (unless they need access to an on-premise resource) and entire projects can happen without security or ops every being directly involved. You need to adapt your policies and org structure to minimize this risk. For example, work with procurement to require a security evaluation/consultation before any new cloud account is opened.
 * Since so much of cloud network security relies on architecture, it isn't just important to have an architect on the team, it's critical they are engaged early in projects. It also goes without saying that this should be a collaborative role. Don't merely write out some pre-approved architectures and then try and force everyone to work within those constraints. You'll lose that fight before you even know it started.
 -------------------RM after here-------------------------------------
-### Discovery
+###Discovery
 
 We hinted at this in the section above -- one of the first challenges is to find all the cloud projects, and then keep finding the new ones over time. Then you need to enumerate the existing cloud network security controls. Here are a couple ways we've seen clients successfully keep tabs on cloud computing:
 
@@ -309,9 +303,9 @@ The next discovery challenge is to figure out how the cloud networks are archite
 * It's an early market, but there are some assessment tools that can help. Especially to analyze security groups/network security and compare it to best practices.
 * You can use the cloud provider's console in many cases, but most of them don't provide a good overall network view. If you don't have a tool to help, you can use scripting and API calls to pull down the raw configuration and manually analyze it.
 
-### Integrating with Development
+###Integrating with Development
 
-In the broadest sense there are two kinds of cloud deployments — applications you build and run in the cloud (or hybrid), and core infrastructure (like file and mail servers) you transition to cloud. While developers play a central role in the former, they are also often involved in the latter.
+In the broadest sense there are two kinds of cloud deployments -- applications you build and run in the cloud (or hybrid), and core infrastructure (like file and mail servers) you transition to cloud. While developers play a central role in the former, they are also often involved in the latter.
 
 Cloud is essentially *software defined everything*. We build and manage all kinds of cloud deployments using code. Even if you start by merely transitioning a few servers into virtual machines on a cloud provider, you will always end up defining and managing much of your environment in code.
 
@@ -321,7 +315,7 @@ This is actually an incredible opportunity for security. Instead of sitting outs
 * A cloud security architect is pretty essential, and this person or team should engage early with development teams to help build security into the initial design. And we hate to have to say it, but their role really needs to be collaborative. Lay down the law with a bunch of requirements that interfere with the project's requirements and they definitely won't be invited back to the table.
 * A lot of security can be automated and templated by working with development. For example, monitoring and automation code that can be deployed on projects without the project team having to develop them from scratch. Even integrating third party tools can often be managed programatically.
 
-### Policy Enforcement
+###Policy Enforcement
 
 Change is constant in cloud computing. The entire founding concept is adjusting capacity (and configuration) to meet changing demands. When we say "enforce policies" we mean that, for a given project, once you design the security you are able to keep it consistent. Just because clouds change all the time doesn't mean it's okay to let a developer drop all the firewalls by mistake.
 
@@ -330,30 +324,30 @@ The key policy enforcement difference between traditional networking and cloud i
 You lose the single point of control. Heck, your own developers can create entire networks from their desktops. Remember the days when people would occasionally plug in their own wireless router or file server? It's a little like that, and more like them building their own datacenter over lunch. Here are some techniques for managing these changes:
 
 * Use access controls to limit who can change what on a given cloud project. It is pretty typical to allow developers a lot of freedom in their dev environment, but totally lock down any network security changes in production, using IAM features of your cloud provider.
-* To the greatest degree possible, try to use cloudprovider-specific templates to define your infrastructure. These files contain a programmatic description of your environment, including complete network and network security configurations. You load them into the cloud platform and it builds the environment for you. This is a very common way to deploy cloud applications, and is essential in organizations using DevOps, since they enforce consistency. 
+* To the greatest degree possible, try to use cloudprovider-specific templates to define your infrastructure. These files contain a programmatic description of your environment, including complete network and network security configurations. You load them into the cloud platform and it builds the environment for you. This is a very common way to deploy cloud applications, and is essential in organizations using DevOps, since they enforce consistency.
 * When this isn't possible, you will need to use a tool or manually pull the network architecture and configuration (including security) and document them. This is your baseline.
 * Then you need to automate change monitoring using a tool or the features of your cloud and/or network security provider.:
 	* Cloud platforms are slowly adding detection and alerting to security configurations, but it's still early and often manual to set up. This is where cloud-specific training and staffing can really pay off, and there are also some third-party tools to monitor these changes for you.
 	* When you use virtual appliances or host security, you don't rely on the cloud provider and you may be able to hook in change management and policy enforcement into your existing approaches. Since these are security specific tools, unlike cloud provider features the security team will often have exclusive access and be responsible for making changes themselves.
 * Did we mention automation? We will talk about it more in a minute, but that's really the only way to maintain cloud security over time.
 
-### Normalizing On-Premise and Cloud Security
+###Normalizing On-Premise and Cloud Security
 
 Organizations have a lot of security requirements for very good reasons, and need to ensure these controls are consistently applied. We also have a tremendous amount of network security experience from decades of running our own networks that are still relevant when moving into the cloud. The challenge is to carry over these requirements and experiences without assuming they work the same in the cloud, or letting them interfere with the benefits of cloud computing.
 
 * Start by translating whatever rules sets you have on-premise into a comparable version in the cloud. This takes a few steps:
 	* Figure out which rules should still apply, or which new rules you need. For example, a policy to deny all SSH traffic from the Internet won't work if that's how you manage public cloud servers. Instead, a policy that limits SSH access to your corporate CIDR makes more sense. Another example is the common restriction that back-end servers shouldn't have any Internet access at all, yet they might need it to connect to PaaS components of their own architecture.
-	* Then, adjust your policies into enforceable rules-sets. For example, security groups and ACLs work differently, and how you enforce them changes. Instead of setting subnet-based policies with a ton of rules, tie security group policies to instances based on their function. We once encountered a client that tried to recreate very-complex firewall rules sets into security groups, exceeding the rule count limit of their provider. Instead we recommended a set of policies for different categories of instances. 
+	* Then, adjust your policies into enforceable rules-sets. For example, security groups and ACLs work differently, and how you enforce them changes. Instead of setting subnet-based policies with a ton of rules, tie security group policies to instances based on their function. We once encountered a client that tried to recreate very-complex firewall rules sets into security groups, exceeding the rule count limit of their provider. Instead we recommended a set of policies for different categories of instances.
 	* Watch out for policies like "deny all traffic from this IP range". Those can be very difficult to enforce in the cloud using native tools, and if you *really* have those requirements you will likely need a network security virtual appliance or host security agent. In many projects we find you can resolve the same level of risk with smarter architectural decisions (e.g. using immutable servers, which we will talk about in a moment).
-	* Don't just drop in a virtual appliance because you are used to it and know how to build the rules. Always start with what your cloud provider offers, then layer on additional tools as needed. 
-	* If you *migrate existing applications to the cloud* the process is a little more complex. You will need to evaluate existing security controls, discover and analyze application dependencies and network requirements, and *then* translate them for a cloud deployment, taking into account all the differences we have been talking about. 
-* Once you translate the rules, normalize operations. This means having a consistent process to deploy, manage, and monitor your network security over time. Fully covering this is beyond to scope of this research, since it depends on how you manage network security operations today. Just remember that you are trying to blend what you do now with what the cloud projects need, not merely enforce your existing processes onto an entirely new operating model. 
+	* Don't just drop in a virtual appliance because you are used to it and know how to build the rules. Always start with what your cloud provider offers, then layer on additional tools as needed.
+	* If you *migrate existing applications to the cloud* the process is a little more complex. You will need to evaluate existing security controls, discover and analyze application dependencies and network requirements, and *then* translate them for a cloud deployment, taking into account all the differences we have been talking about.
+* Once you translate the rules, normalize operations. This means having a consistent process to deploy, manage, and monitor your network security over time. Fully covering this is beyond to scope of this research, since it depends on how you manage network security operations today. Just remember that you are trying to blend what you do now with what the cloud projects need, not merely enforce your existing processes onto an entirely new operating model.
 
-We hate to say it (but we will), but this is a process of transition. We find customers that start on a project-by-project basis are more successful since they can learn as they go and build up a repository of knowledge and experience. 
+We hate to say it (but we will), but this is a process of transition. We find customers that start on a project-by-project basis are more successful since they can learn as they go and build up a repository of knowledge and experience.
 
-### Automation and Immutable Network Security
+###Automation and Immutable Network Security
 
-Cloud security automation isn't merely fodder for another paper; it's an entirely new body of knowledge are are only just beginning to build. 
+Cloud security automation isn't merely fodder for another paper; it's an entirely new body of knowledge are are only just beginning to build.
 
 Any organization that moves to cloud in any significant way learns quickly that automation is the only way to survive. Think about it, how else can you manage multiple copies of a single project in different environments, never mind dozens or hundreds of different projects, all running in their own *sets* of cloud accounts across multiple providers.
 
@@ -361,7 +355,7 @@ Then, keep all those projects compliant with regulatory requirements and your in
 
 Yeah, it's like that.
 
-But this isn't an unsolvable problem. Every day we see more examples of companies successfully using the cloud, at scale, and staying secure and compliance. Today, in large part, they build their own library of tools and scripts to continually monitor and enforce changes. We also see some emerging tools to help with this management, and we expect to see many more in the near future. 
+But this isn't an unsolvable problem. Every day we see more examples of companies successfully using the cloud, at scale, and staying secure and compliance. Today, in large part, they build their own library of tools and scripts to continually monitor and enforce changes. We also see some emerging tools to help with this management, and we expect to see many more in the near future.
 
 A core developing concept tied to automation is that of *immutable security*, and it's one we have used ourselves.
 
@@ -369,13 +363,13 @@ One of the core problems in security is managing change. We design something, bu
 
 For example, an *immutable server* is one that is never logged into and changed in production. If you go back and think about auto scaling we deploy servers based on standard images. Changing one of those servers after deployment doesn't make sense, because those changes aren't in the image, and new versions launched into the auto scale group won't include the changes. Instead, DevOps creates a new image with all changes, then alters the auto scale group rules to deploy new instances based on the new image and, in some cases, kill off the older versions.
 
-In other words, no more patching, no more logging into servers. You take a new, known good state, and completely override what is in production. 
+In other words, no more patching, no more logging into servers. You take a new, known good state, and completely override what is in production.
 
-Now think about how this applies to network security. We can build templates to automatically deploy entire environments on our cloud providers. We can write network security policies, then override any changes automatically, even across multiple cloud accounts. It pushes the security effort earlier into design and development, but then enables much more consistent enforcement in operations. And we use the exact same toolchain as development and operations to deploy our security controls, instead of trying to build our own on the side and overlay enforcement. 
+Now think about how this applies to network security. We can build templates to automatically deploy entire environments on our cloud providers. We can write network security policies, then override any changes automatically, even across multiple cloud accounts. It pushes the security effort earlier into design and development, but then enables much more consistent enforcement in operations. And we use the exact same toolchain as development and operations to deploy our security controls, instead of trying to build our own on the side and overlay enforcement.
 
 This might seem like an aside, but these automation principles are the cornerstone of real-world cloud security, especially at scale. It's a capability we simply never have in traditional infrastructure where we can't simply stamp out new environments automatically and have to hand-configure everything.
 
-# Design Patterns
+#Design Patterns
 
 To finish off this research it's time to show you want some of this looks like. Here are some practical design patterns based on projects we've worked on. The examples are specific to Amazon Web Services and Microsoft Azure as opposed to generic templates. Generic patterns are harder to explain, and we would rather you understand what these look like in the real world.
 
