@@ -141,38 +141,28 @@ Now that we have covered the basics of cloud networks it's time to focus on avai
 
 Not to sound like a broken record (those round things your parents listened to... no, not the small shiny ones with lasers), but all providers are different. The following options are relatively common across providers, but not necessarily ubiquitous.
 
-* **Perimeter security** is traditional network security that the provider totally manages, invisibly to the customers. Firewalls, IPS, etc. are used to protect the provider's infrastructure. The customer doesn't control any of it.
-
-	PRO: It's free, effective, and always there.
-	CON: You don't control any of it, and it's only useful for stopping background attacks.
-
-* **Security groups** -- Think of this is a tag you can apply to a network interface/instance (or certain other cloud objects, like a database or load balancer) that applies an associated set of network security rules. Security groups combine the best of network and host firewalls, since you get policies that can follow individual servers (or even network interfaces) like a host firewall but you manage them like a network firewall and protection is applied no matter what is running inside. You get the granularity of a host firewall with the manageability of a network firewall. These are critical to auto scaling -- since you are now spreading your assets all over your virtual network -- and, because instances appear and disappear on demand, you can't rely on IP addresses to build your security rules. Here's an example: You can create a "database" security group that only allows access to one specific database port and only from instances inside a "web server" security group, and only those web servers in that group can talk to the database servers in that group. Unlike a network firewall the database servers can't talk to each other since they aren't in the web server group (remember, the rules get applied on a per-server basis, not a subnet, although some providers support both). As new databases pop up, the right security is applied as long as they have the tag. Unlike host firewalls, you don't need to log into servers to make changes, everything is much easier to manage. Not all providers use this term, but the concept of security rules as a policy set you can apply to instances is relatively consistent.
-
-	Security groups do vary between providers. Amazon, for example, is default deny and only allows allow rules. Microsoft Azure, however, allows rules that more-closely resemble those of a traditional firewall, with both allow and block options. 
-
-	PRO: It's free and it works hand in hand with auto scaling and default deny. It's very granular but also very easy to manage. It's the core of cloud network security.
-	CON: They are usually allow rules only (you can't explicitly deny), basic firewalling only and you can't manage them using tools you are already used to.
-
 * **Perimeter security** is traditional network security that the provider totally manages, invisibly to their customers. Firewalls, IPS, etc. are used to protect the provider's infrastructure. The customer doesn't control any of it.
- * **Pro:** It's free, effective, and always there.
- * **Con:** You don't control any of it, and it's only useful for stopping background attacks.
 
-* **Security groups:** Think of a group as a tag you can apply to a network interface/instance (or certain other cloud objects, such as databases and load balancers) that applies an associated set of network security rules. Security groups combine the best of network and host firewalls, because you get policies that can follow individual servers (or even network interfaces) like a host firewall, but you manage them like network firewalls, with protection applied no matter what is running inside. You get the granularity of a host firewall with the manageability of a network firewall. They are critical to auto scaling. You are now spreading assets all over your virtual network, and instances appear and disappear on demand, so you cannot build security rules on IP addresses. Here's an example: You can create a "database" security group that only allows access to one specific database port, from instances inside a "web server" security group, and only the web servers in that group can talk to the database servers in this "database" group. Unlike a network firewall, the database servers can't talk to each other, because they aren't in the web server group (remember, these rules are applied on a per-server basis, not at subnet boundaries). As new databases pop up the right security is applied so long as they have the tag. Unlike host firewalls you don't need to log into servers to make changes, so everything is much easier to manage. Not all providers use this term, but the concept of security rules as a policy set you can apply to instances is relatively consistent.
- * **Pro:** It's free and it works hand in hand with auto scaling and default deny. It's very granular but also very easy to manage. It's the core of cloud network security.
- * **Con:** They are usually allow rules only (you can't explicitly deny), basic firewalling only, and you cannot manage them using familiar tools.
+**Pro:** It's free, effective, and always there.
+**Con:** You don't control any of it, and it's only useful for stopping background attacks.
+
+* **Security groups:** Think of a group as a tag you can apply to a network interface/instance (or certain other cloud objects, such as databases and load balancers) that applies an associated set of network security rules. Security groups combine the best of network and host firewalls, because you get policies that can follow individual servers (or even network interfaces) like a host firewall, but you manage them like network firewalls, with protection applied no matter what is running inside. You get the granularity of a host firewall with the manageability of a network firewall. They are critical to auto scaling. You are now spreading assets all over your virtual network, and instances appear and disappear on demand, so you cannot build security rules on IP addresses. Here's an example: You can create a "database" security group that only allows access to one specific database port, from instances inside a "web server" security group, and only the web servers in that group can talk to the database servers in this "database" group. Unlike a network firewall, the database servers can't talk to each other, because they aren't in the web server group (remember, these rules are applied on a per-server basis, not at subnet boundaries, although that's also sometimes an option). As new databases pop up the right security is applied so long as they have the tag. Unlike host firewalls you don't need to log into servers to make changes, so everything is much easier to manage. Not all providers use this term, but the concept of security rules as a policy set you can apply to instances is relatively consistent. 
+
+Security groups do vary between providers. Amazon, for example, is default deny and only allows allow rules. Microsoft Azure, however, allows rules that more-closely resemble those of a traditional firewall, with both allow and block options. 
+
+**Pro:** It's free and it works hand in hand with auto scaling and default deny. It's very granular but also very easy to manage. It's the core of cloud network security.
+**Con:** They are usually allow rules only (you can't explicitly deny), basic firewalling only, and you cannot manage them using most of your familiar tools.
 
 * **ACLs (Access Control Lists)** -- While security groups work on a per instance (or object) level, ACLs restrict communications between subnets in your virtual network. Not all providers offer them, and they are more to handle legacy network configurations (when you need a restriction that matches what you might have in your existing data center) than 'modern' cloud architectures (which typically ignore or avoid them). In some cases you can use them to get around the limitations of security groups, depending on your provider.
- * **Pro:** ACLs can isolate traffic between virtual network segments and can create both `allow` and `deny` rules.
- * **Con:** They're not great for auto scaling and don't apply to specific instances. You also lose some powerful granularity.
- * By default nearly all cloud providers launch your assets with default-deny on all inbound traffic. Some might automatically open a management port from your current location (based on IP address), but that's about it. Some providers may use the term ACL to describe what we called a security group. Sorry -- we know it's confusing, but blame the vendors, not your friendly neighborhood analysts.
+
+**Pro:** ACLs can isolate traffic between virtual network segments and can create both `allow` and `deny` rules.
+**Con:** They're not great for auto scaling and don't apply to specific instances. You also lose some powerful granularity.
+
+By default nearly all cloud providers launch your assets with default-deny on all inbound traffic. Some might automatically open a management port from your current location (based on IP address), but that's about it. Some providers may use the term ACL to describe what we called a security group. Sorry -- we know it's confusing, but blame the vendors, not your friendly neighborhood analysts.
 
 ###Commercial Options
 
 There are a number of add-ons you can buy through your cloud provider, or buy and run yourself.
-
-* **Physical security appliances:** The provider will provision an old-school piece of hardware to protect your assets. These are mostly just seen in VLAN-based providers and are considered pretty antiquated. They may also be used in private (on premise) clouds where you control and run the network yourself, which is out of scope for this research.
-
-	PRO: They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider and in that case this paper isn't for you.
 
 * **Physical security appliances:** The provider will provision an old-school piece of hardware to protect your assets. These are mostly seen at VLAN-based providers, and are pretty antiquated. They may also be used in private (on-premise) clouds, where you control and run the network yourself, which is out of scope for this research.
 
@@ -180,19 +170,16 @@ There are a number of add-ons you can buy through your cloud provider, or buy an
 	CON: Cost can be a concern, since these use resources like any other virtual server, constrains your architectures and they may not play well with auto scaling and other cloud-native features.
 
 * **Virtual appliances** are a virtual machine version of your friendly neighborhood security appliance, and must be configured and tuned for the cloud platform you are working on. They can provide more advanced security -- such as IPS, WAF, NGFW -- than cloud providers typically offer. They are also useful for capturing network traffic, which providers tend not to support.
- * **Pro:** They enable more advanced network security, and can be managed the same as on-premise versions of these tools.
- * **Con:** Cost can be a concern because they use resources like any other virtual server constraining your architectures, and may not play well with auto scaling and other cloud features.
+
+**Pro:** They enable more advanced network security, and can be managed the same as on-premise versions of these tools.
+**Con:** Cost can be a concern because they use resources like any other virtual server constraining your architectures, and may not play well with auto scaling and other cloud features.
 
 * **Host security agents** are software agents you build into images, which run in your instances and provide network security. This could include IDS, IPS, or other features beyond basic firewalling. We recommend lightweight agents with remote management. The agents (and management platform) need to be designed for use in cloud computing, because auto scaling and portability break traditional tools.
- * **Pro:** Like virtual appliances, host security agents can offer features missing from your provider. With a good management system they can be extremely flexible, and they usually include capabilities beyond network security. They are a great option for monitoring network traffic.
- * **Con:** You need to make sure they are installed and run in all your instances, and they are not free. They also won't work well if you get one that isn't designed for the cloud.
+
+**Pro:** Like virtual appliances, host security agents can offer features missing from your provider. With a good management system they can be extremely flexible, and they usually include capabilities beyond network security. They are a great option for monitoring network traffic.
+**Con:** You need to make sure they are installed and run in all your instances, and they are not free. They also won't work well if you get one that isn't designed for the cloud.
 
 > A note on monitoring: None of the major providers offers packet-level network monitoring and many don't offer any network monitoring at all. If you need it, consider host agents and virtual appliances.
-
-
-
-[1]:	http://www.youtube.com/watch?v=Zd5hsL-JNY4
-[2]:	https://en.wikipedia.org/wiki/Virtual_LAN
 
 To review, your network security controls, no matter what your provider calls them, nearly always fall into 5 buckets:
 
