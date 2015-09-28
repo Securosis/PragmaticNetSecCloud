@@ -383,24 +383,24 @@ To finish off this research it's time to show what some of this looks like. Here
 
 This is a simplified example of a public network on Azure. All the components run on Azure, with nothing in the enterprise data center, and no VPN connections. Management of all assets is over the Internet. We can't show all the pieces and configuration settings in this diagram, so here are some specifics:
 
+![Basic Public Network on Azure](https://securosis.com/assets/library/main/Cloud-Public-Network.png)
 
-
-* The Internet Gateway is set in Azure by default. Azure also sets up default *service endpoints* for the management ports to manage your instances. These connections are direct to each instance and don't run through the load balancer. They will (should) be limited to only your current IP address, and the ports are closed to the rest of the world. In this example we have a single public facing subnet.
+* The Internet Gateway is set in Azure by default (you don't need to do anything). Azure also sets up default *service endpoints* for the management ports to manage your instances. These connections are direct to each instance and don't run through the load balancer. They will (should) be limited to only your current IP address, and the ports are closed to the rest of the world. In this example we have a single public facing subnet.
 * Each instance gets a public IP address and domain name, but you can't access anything that isn't opened up with a defined service endpoint. Think of the endpoint as port forwarding, which it pretty much is.
 * The service endpoint can point to the load balancer, which in turn is tied to the auto scale group. You set rules on instance health, performance, and availability; the load balancer and auto scale group provision and deprovision servers as needed, and handle routing. The IP addresses of the instances change as these updates take place.
 * *Network Security Groups (NSGs)* restrict access to each instance. In Azure you can also apply them to subnets. In this case we would apply them on a per-server basis. Traffic would be restricted to whatever services are being provided by the application, and would `deny` traffic between instances on the same subnet. Azure allows such internal traffic by default, unlike Amazon.
 * NSGs can also restrict traffic to the instances, locking it down to only from the load balancer and thus disabling direct Internet access. Ideally you never need to log into the servers because they are in an auto scale group, so you can also disable all the management/administration ports.
 
-There is more, but this pattern produces a hardened server, with no administrative traffic, protected with both Azure's default protections and security groups. Note that on Azure you are often much better off using their PaaS offerings such as web servers, instead of manually building infrastructure like this.
+There is more, but this pattern produces a hardened server, with no administrative traffic, protected with both Azure's default protections and Network Security Groups. Note that on Azure you are often much better off using their PaaS offerings such as web servers, instead of manually building infrastructure like this.
 
 ##Basic Private Network on Amazon Web Services
 
 Amazon works a bit differently than Azure (okay -- much differently). This example is a Virtual Private Cloud (VPC, their name for a virtual network) that is completely private, without any Internet routing, connected to a data center through a VPN connection.
 
-
+![Basic Private Network on AWS](https://securosis.com/assets/library/main/Cloud-Private-Network.png)
 
 * This shows a class B network with two smaller subnets. In AWS you would place each subnet in a different *Availability Zone* (what we called a 'zone') for resilience in case one goes down -- they are separate physical data centers.
-* You configure the VPN gateway through the AWS console or API, and then configure the client side of the VPN connection on your own hardware. Amazon maintains the VPN gateway; you don't directly touch or maintain it, but you do need to maintain everything on your side of the connection (and it needs to be a hardware VPN).
+* You configure the VPN gateway through the AWS console or API, and then configure the client side of the VPN connection on your own hardware. Amazon maintains the VPN gateway in AWS; you don't directly touch or maintain it, but you do need to maintain everything on your side of the connection (and it needs to be a hardware VPN).
 * You adjust the routing table on your internal network to send all traffic for the 10.0.0.0/16 network over the VPN connection to AWS. This is why it's called a 'virtual' private cloud. Instances can't see the Internet, but you have that gateway that's Internet accessible.
 * You also need to set your virtual routing table in AWS to send Internet traffic back through your corporate network if you want any of your assets to access the Internet for things like software updates. Sometimes you do, sometimes you don't -- we don't judge.
 * By default instances are protected with a Security Group that denies all inbound traffic and allows all outbound traffic. Unlike in Azure, instances on the same subnet can't talk to each other. You cannot connect to them through the corporate network until you open them up. *AWS Security Groups offer `allow` rules only*. You cannot explicitly deny traffic -- only open up allowed traffic. In Azure you create Service Endpoints to explicitly route traffic, then use network security groups to allow or deny on top of that (within the virtual network). AWS uses security groups for both functions -- opening a security group allows traffic through the private IP (or public IP if it is public facing).
@@ -411,7 +411,7 @@ Amazon works a bit differently than Azure (okay -- much differently). This examp
 
 This builds on our previous examples. In this case the web servers and app servers are separated, with app servers on a private subnet. We already explained the components in our other examples, so there is only a little to add:
 
-
+![Hybrid on Azure](https://securosis.com/assets/library/main/Cloud-Hybrid.png)
 
 * The key security control here is a Network Security Group to restrict access to the app servers from ONLY the web servers, and only to the specific port and protocol required.
 * The NSG should be applied to each instance, not to the subnets, to prevent a "flat network" and block peer traffic that could be used in an attack.
@@ -422,7 +422,7 @@ This builds on our previous examples. In this case the web servers and app serve
 
 Our last example shows how to use some of the latest features of Amazon Web Services to create a new cloud-native design for big data transfers and analytics.
 
-
+![Data Transfer and Analysis on AWS](https://securosis.com/assets/library/main/Cloud-Data-Transfer.png)
 
 * In this example there is a private subnet in AWS, without either Internet access *or* a connection to the enterprise data center. Images will be created in either another account or a VPC, and nothing will be manually logged into.
 * When an analytics job is triggered, a server in the data center takes the data and sends it to Amazon S3, their object storage service, using command line tools or custom code. This is an encrypted connection by default, but you could also encrypt the data using the AWS Key Management Service (or any encryption tool you want). We have clients using both options.
@@ -432,7 +432,7 @@ Our last example shows how to use some of the latest features of Amazon Web Serv
 * When the analysis instances launch the Lambda code sends them the location of the data in S3 to analyze. The instances connect to S3 through something known as a *VPC Endpoint*, which is totally different from an Azure service endpoint. A VPC endpoint allows instances in a totally private subnet to talk to S3 without Internet access (which was required until recently). As of this writing only S3 has a VPC endpoint, but we know Amazon is working on endpoints for additional services such as their Simple Queue Service (we suspect AWS hasn't confirmed exactly which services are next on the list).
 * The instances boot, grab the data, then do their work. When they are done they go through the S3 VPC Endpoint to drop their results into a second S3 bucket.
 * The first bucket only allows writes from the data center, and reads from the private subnet. The second bucket reverses that and only allows reads from the data center and writes from the subnet. Everything is a one-way closed loop.
-* The instance can then trigger another Lambda function to send a notification back to the data center that the job is complete, and code in the data center can grab the results. There are several ways to do this -- for example the results could go into a database, instead.
+* The instance can then trigger another Lambda function to send a notification back to your on-premise data center or application that the job is complete, and code in the data center can grab the results. There are several ways to do this -- for example the results could go into a database, instead.
 * Once everything is complete Lambda moves the original data into *Glacier*, Amazon's super-cheap long-term archival storage. In this scenario it is of course encrypted. (For this network-focused research we are skipping over most of the encryption options for this architecture, but they aren't overly difficult).
 
 Think about what we have described: the analysis servers have *no* Internet access, spin up only as needed, and can only read in new data and write out results. They automatically terminate when finished, so there is no persistent data sitting unused on a server or in memory. All Internet-facing components are native Amazon services, so we don't need to maintain their network security. Everything is extremely cost-effective, even for very large data sets, because we only process when we need it; big data sets are always stored in the cheapest option possible, and automatically shifted around to minimize storage costs. The system is event-driven so if you load 5 jobs at once, it runs all 5 at the same time without any waiting or slowdown, and if there are no jobs the components are just programmatic templates, in the absolute most cost-effective state.
@@ -445,12 +445,8 @@ This research isn't the tip of the iceberg; it's more like the first itty bitty 
 
 * The biggest differences between cloud and traditional networks is the combination of *abstraction* (virtualization) and *automation*. Things look the same but don't *function* the same.
 * Everything is managed by software, providing tremendous flexibility, and enabling you to manage network security using the exact same tools that Development and Operations use to manage their pieces of the puzzle.
-* You can achieve tremendous security through architecture. Virtual networks (and multiple cloud accounts) support incredible degrees of compartmentalization, where every project has itss own dedicated network or networks.
+* You can achieve tremendous security through architecture. Virtual networks (and multiple cloud accounts) support incredible degrees of compartmentalization, where every project has its own dedicated network or networks.
 * Security groups enhance that by providing the granularity of host firewalls, without the risks of relying on operating systems. They provide better manageability than even most network firewalls.
 * Platform as a Service and cloud-provider-specific services open up entirely new architectural options. Don't try to build things the way you always have. Actually, if you find yourself doing that, you should probably rethink your decision to use the cloud.
 
 Don't be intimidated by cloud computing, but don't think you can or should implement network security the way you always have. Your skills and experiences are still important, and provide a base to build on as you learn all the new options available within the cloud.
-
-
-[1]:	http://www.youtube.com/watch?v=Zd5hsL-JNY4
-[2]:	https://en.wikipedia.org/wiki/Virtual_LAN
