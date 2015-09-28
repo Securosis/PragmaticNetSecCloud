@@ -167,7 +167,6 @@ There are a number of add-ons you can buy through your cloud provider, or buy an
 * **Physical security appliances:** The provider will provision an old-school piece of hardware to protect your assets. These are mostly seen at VLAN-based providers, and are pretty antiquated. They may also be used in private (on-premise) clouds, where you control and run the network yourself, which is out of scope for this research.
 
 **Pro:** They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider, and in that case this paper isn't for you.  
-**Con:** Cost can be a concern, since these use resources like any other virtual server, constrains your architectures and they may not play well with auto scaling and other cloud-native features.
 
 * **Virtual appliances** are a virtual machine version of your friendly neighborhood security appliance, and must be configured and tuned for the cloud platform you are working on. They can provide more advanced security -- such as IPS, WAF, NGFW -- than cloud providers typically offer. They are also useful for capturing network traffic, which providers tend not to support.
 
