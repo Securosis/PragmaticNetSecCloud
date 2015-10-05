@@ -191,7 +191,7 @@ To review, your network security controls, no matter what your provider calls th
 
 >Advanced Options on the Horizon
 >
->We know some niche vendors already offer more advanced network security built into their platforms, such as IPS, and we exspect major vendors to eventually offer similar options. We don't recommend picking a cloud provider based on these, but you may get more options in the future.
+>We know some niche vendors already offer more advanced network security built into their platforms, such as IPS, and we expect major vendors to eventually offer similar options. We don't recommend picking a cloud provider based on these, but you may get more options in the future.
 
 #Building Your Cloud Network Security Program
 
