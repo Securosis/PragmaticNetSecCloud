@@ -167,7 +167,12 @@ There are a number of add-ons you can buy through your cloud provider, or buy an
 * **Physical security appliances:** The provider will provision an old-school piece of hardware to protect your assets. These are mostly seen at VLAN-based providers, and pretty antiquated. They may also be used in private (on-premise) clouds, where you control and run the network yourself, but that's out of scope for this research.
 
 <<<<<<< PragmaticNetSecCloud.md
+<<<<<<< PragmaticNetSecCloud.md
 **Pro:** They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider, and in that case this paper isn't for you.  
+=======
+**Pro:** They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider, in which case this paper isn't for you.  
+**Con:** Cost can be a concern because they these use resources like any other virtual server, constrain your architectures, and may not play well with auto scaling and other cloud features.
+>>>>>>> PragmaticNetSecCloud.md
 =======
 **Pro:** They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider, in which case this paper isn't for you.  
 **Con:** Cost can be a concern because they these use resources like any other virtual server, constrain your architectures, and may not play well with auto scaling and other cloud features.
