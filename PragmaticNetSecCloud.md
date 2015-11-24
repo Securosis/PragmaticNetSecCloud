@@ -169,7 +169,12 @@ There are a number of add-ons you can buy through your cloud provider, or buy an
 <<<<<<< PragmaticNetSecCloud.md
 <<<<<<< PragmaticNetSecCloud.md
 <<<<<<< PragmaticNetSecCloud.md
+<<<<<<< PragmaticNetSecCloud.md
 **Pro:** They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider, and in that case this paper isn't for you.  
+=======
+**Pro:** They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider, in which case this paper isn't for you.  
+**Con:** Cost can be a concern because they these use resources like any other virtual server, constrain your architectures, and may not play well with auto scaling and other cloud features.
+>>>>>>> PragmaticNetSecCloud.md
 =======
 **Pro:** They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider, in which case this paper isn't for you.  
 **Con:** Cost can be a concern because they these use resources like any other virtual server, constrain your architectures, and may not play well with auto scaling and other cloud features.
@@ -424,9 +429,15 @@ Amazon works a bit differently than Azure (okay -- much differently). This examp
 ##Hybrid Cloud on Azure
 
 This builds on our previous examples. In this case the web servers and app servers are separated, with app servers on a private subnet. We already explained the components in our other examples, so there is only a little to add:
+<<<<<<< PragmaticNetSecCloud.md
 
 ![Hybrid on Azure](https://securosis.com/assets/library/main/Cloud-Hybrid.png)
 
+=======
+
+![Hybrid on Azure](https://securosis.com/assets/library/main/Cloud-Hybrid.png)
+
+>>>>>>> PragmaticNetSecCloud.md
 * The key security control here is a Network Security Group to allow access to the app servers **only** from the web servers, and only to the specific port and protocol required.
 * The NSG should be applied to each instance, not to the subnets, to prevent a "flat network" and block peer traffic that could be used in an attack.
 * The app servers can connect to your datacenter, and that is where you route all Internet traffic. That gives you just as much control over Internet traffic as with virtual machines in your own data center.
@@ -435,6 +446,7 @@ This builds on our previous examples. In this case the web servers and app serve
 ##A Cloud Native Data Analytics Architecture
 
 Our last example shows how to use some of the latest features of Amazon Web Services to create a new cloud-native design for big data transfers and analytics.
+<<<<<<< PragmaticNetSecCloud.md
 
 ![Data Transfer and Analysis on AWS](https://securosis.com/assets/library/main/Cloud-Data-Transfer.png)
 
@@ -451,6 +463,24 @@ Our last example shows how to use some of the latest features of Amazon Web Serv
 
 Think about what we have described: the analysis servers have *no* Internet access, spin up only as needed, and can only read in new data and write out results. They automatically terminate when finished, so there is no persistent data sitting unused on a server or in memory. All Internet-facing components are native Amazon services, so we don't need to maintain their network security. Everything is extremely cost-effective, even for very large data sets, because we only process when we need it; big data sets are always stored in the cheapest option possible, and automatically shifted around to minimize storage costs. The system is event-driven so if you load 5 jobs at once, it runs all 5 at the same time without any waiting or slowdown, and if there are no jobs the components are just programmatic templates, in the absolute most cost-effective state.
 
+=======
+
+![Data Transfer and Analysis on AWS](https://securosis.com/assets/library/main/Cloud-Data-Transfer.png)
+
+* In this example we have is a private subnet in AWS, without either Internet access *or* a connection to the enterprise data center. Images will be created in another account or VPC, and there will be no manual logins.
+* When an analytics job is triggered, a server in the data center takes the data and sends it to Amazon S3, their object storage service, using command-line tools or custom code. This is an encrypted connection by default, but you could also encrypt the data using the AWS Key Management Service or any other encryption tool. We have clients using both options.
+* The S3 bucket in AWS is tightly restricted to either only the IP address of the sending server, a set of AWS IAM credentials, or both. AWS manages S3 security so you don't worry about network attacks, merely enabling access. S3 isn't like a public FTP server -- if you lock it down (easy to do) it isn't visible except from authorized sources.
+* A service called AWS *Lambda* monitors the S3 bucket. Lambda is a container for event-driven code running inside Amazon that can trigger based on internal things, including a new file appearing in an S3 bucket. You only pay for Lambda when your code is executing, so there is no cost to have it wait for events.
+* When a new file appears the Lambda function triggers and launches analysis instances based on a standard image. The analysis instances run in a private subnet, with security group settings that block **all** inbound access.
+* When the analysis instances launch, the Lambda code sends them the S3 location of the data to analyze. The instances connect to S3 through something known as a *VPC Endpoint*, which is totally different from an Azure service endpoint. A VPC endpoint allows instances in a totally private subnet to talk to S3 without Internet access (which was required until recently). As of this writing only S3 offers a VPC endpoint, but we know Amazon is working on endpoints for additional services such as their Simple Queue Service (we suspect AWS hasn't confirmed exactly which services are next on the list).
+* The instances boot, grab the data, then do their work. When they are done they go through the S3 VPC endpoint to drop their results into a second S3 bucket.
+* The first bucket only allows writes from the data center, and reads from the private subnet. The second bucket reverses that and only allows reads from the data center and writes from the subnet. Everything is a one-way closed loop.
+* The instance can then trigger another Lambda function to send a notification back to your on-premise data center or application that the job is complete, and code in the data center can grab the results. There are several ways to do this -- for example the results could go into a database, instead.
+* Once everything is complete Lambda moves the original data into *Glacier*, Amazon's super-cheap long-term archival storage. In this scenario it is of course encrypted. (For this network-focused research we are skipping over most of the encryption options for this architecture, but they aren't overly difficult).
+
+Think about what we have described: the analysis servers have *no* Internet access, spin up only as needed, and can only read in new data and write out results. They automatically terminate when finished, so there is no persistent data sitting unused on a server or in memory. All Internet-facing components are native Amazon services, so we don't need to maintain their network security. Everything is extremely cost-effective, even for very large data sets, because we only process when we need it; big data sets are always stored in the cheapest option possible, and automatically shifted around to minimize storage costs. The system is event-driven so if you load 5 jobs at once, it runs all 5 at the same time without any waiting or slowdown, and if there are no jobs the components are just programmatic templates, in the absolute most cost-effective state.
+
+>>>>>>> PragmaticNetSecCloud.md
 This example does skip some options that would improve resiliency in exchange for network security. For example we would normally recommend using Simple Queue Service to manage the jobs (Lambda would send them over), because SQS handles situations such as an instance failing partway through processing. But this is security research, not availability focused.
 
 ##Conclusion
