@@ -170,7 +170,12 @@ There are a number of add-ons you can buy through your cloud provider, or buy an
 <<<<<<< PragmaticNetSecCloud.md
 <<<<<<< PragmaticNetSecCloud.md
 <<<<<<< PragmaticNetSecCloud.md
+<<<<<<< PragmaticNetSecCloud.md
 **Pro:** They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider, and in that case this paper isn't for you.  
+=======
+**Pro:** They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider, in which case this paper isn't for you.  
+**Con:** Cost can be a concern because they these use resources like any other virtual server, constrain your architectures, and may not play well with auto scaling and other cloud features.
+>>>>>>> PragmaticNetSecCloud.md
 =======
 **Pro:** They're expensive, but they're something you are used to managing. They keep your existing vendor happy? Look, it's really all cons on this one unless you're a cloud provider, in which case this paper isn't for you.  
 **Con:** Cost can be a concern because they these use resources like any other virtual server, constrain your architectures, and may not play well with auto scaling and other cloud features.
@@ -430,9 +435,15 @@ Amazon works a bit differently than Azure (okay -- much differently). This examp
 
 This builds on our previous examples. In this case the web servers and app servers are separated, with app servers on a private subnet. We already explained the components in our other examples, so there is only a little to add:
 <<<<<<< PragmaticNetSecCloud.md
+<<<<<<< PragmaticNetSecCloud.md
 
 ![Hybrid on Azure](https://securosis.com/assets/library/main/Cloud-Hybrid.png)
 
+=======
+
+![Hybrid on Azure](https://securosis.com/assets/library/main/Cloud-Hybrid.png)
+
+>>>>>>> PragmaticNetSecCloud.md
 =======
 
 ![Hybrid on Azure](https://securosis.com/assets/library/main/Cloud-Hybrid.png)
@@ -447,6 +458,9 @@ This builds on our previous examples. In this case the web servers and app serve
 
 Our last example shows how to use some of the latest features of Amazon Web Services to create a new cloud-native design for big data transfers and analytics.
 <<<<<<< PragmaticNetSecCloud.md
+<<<<<<< PragmaticNetSecCloud.md
+=======
+>>>>>>> PragmaticNetSecCloud.md
 
 ![Data Transfer and Analysis on AWS](https://securosis.com/assets/library/main/Cloud-Data-Transfer.png)
 
@@ -463,9 +477,13 @@ Our last example shows how to use some of the latest features of Amazon Web Serv
 
 Think about what we have described: the analysis servers have *no* Internet access, spin up only as needed, and can only read in new data and write out results. They automatically terminate when finished, so there is no persistent data sitting unused on a server or in memory. All Internet-facing components are native Amazon services, so we don't need to maintain their network security. Everything is extremely cost-effective, even for very large data sets, because we only process when we need it; big data sets are always stored in the cheapest option possible, and automatically shifted around to minimize storage costs. The system is event-driven so if you load 5 jobs at once, it runs all 5 at the same time without any waiting or slowdown, and if there are no jobs the components are just programmatic templates, in the absolute most cost-effective state.
 
+<<<<<<< PragmaticNetSecCloud.md
 =======
 
 ![Data Transfer and Analysis on AWS](https://securosis.com/assets/library/main/Cloud-Data-Transfer.png)
+=======
+This example does skip some options that would improve resiliency in exchange for network security. For example we would normally recommend using Simple Queue Service to manage the jobs (Lambda would send them over), because SQS handles situations such as an instance failing partway through processing. But this is security research, not availability focused.
+>>>>>>> PragmaticNetSecCloud.md
 
 * In this example we have is a private subnet in AWS, without either Internet access *or* a connection to the enterprise data center. Images will be created in another account or VPC, and there will be no manual logins.
 * When an analytics job is triggered, a server in the data center takes the data and sends it to Amazon S3, their object storage service, using command-line tools or custom code. This is an encrypted connection by default, but you could also encrypt the data using the AWS Key Management Service or any other encryption tool. We have clients using both options.
@@ -478,6 +496,7 @@ Think about what we have described: the analysis servers have *no* Internet acce
 * The instance can then trigger another Lambda function to send a notification back to your on-premise data center or application that the job is complete, and code in the data center can grab the results. There are several ways to do this -- for example the results could go into a database, instead.
 * Once everything is complete Lambda moves the original data into *Glacier*, Amazon's super-cheap long-term archival storage. In this scenario it is of course encrypted. (For this network-focused research we are skipping over most of the encryption options for this architecture, but they aren't overly difficult).
 
+<<<<<<< PragmaticNetSecCloud.md
 Think about what we have described: the analysis servers have *no* Internet access, spin up only as needed, and can only read in new data and write out results. They automatically terminate when finished, so there is no persistent data sitting unused on a server or in memory. All Internet-facing components are native Amazon services, so we don't need to maintain their network security. Everything is extremely cost-effective, even for very large data sets, because we only process when we need it; big data sets are always stored in the cheapest option possible, and automatically shifted around to minimize storage costs. The system is event-driven so if you load 5 jobs at once, it runs all 5 at the same time without any waiting or slowdown, and if there are no jobs the components are just programmatic templates, in the absolute most cost-effective state.
 
 >>>>>>> PragmaticNetSecCloud.md
@@ -485,6 +504,8 @@ This example does skip some options that would improve resiliency in exchange fo
 
 ##Conclusion
 
+=======
+>>>>>>> PragmaticNetSecCloud.md
 This research isn't the tip of the iceberg; it's more like the first itty bitty little ice crystal on top of an iceberg, which stretches down into a deep ocean trench. But if you remember the following principles, you will be fine as you dig into securing your own cloud and hybrid deployments:
 
 * The biggest differences between cloud and traditional networks is the combination of *abstraction* (virtualization) and *automation*. Things look the same but don't *function* the same.
